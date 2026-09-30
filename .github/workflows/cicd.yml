@@ -1,0 +1,51 @@
+name: A Minha Primeira Pipeline CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # ETAPA 1: Integração Contínua (Testes)
+  continuous-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter o código do repositório
+        uses: actions/checkout@v4
+
+      - name: 🧪 Executar Teste Sintaxe (CI)
+        run: |
+          echo "A verificar se o ficheiro index.html existe..."
+          if [ -f index.html ]; then
+            echo "✅ Teste passou: Ficheiro index.html encontrado!"
+          else
+            echo "❌ Erro: index.html não encontrado no repositório."
+            exit 1
+          fi
+
+  # ETAPA 2: Entrega Contínua (Deploy)
+  continuous-deployment:
+    needs: continuous-integration
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Obter o código
+        uses: actions/checkout@v4
+
+      - name: Configurar as Páginas do GitHub
+        uses: actions/configure-pages@v4
+
+      - name: Compactar o Site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: 🚀 Colocar o Site no Ar (CD)
+        id: deployment
+        uses: actions/deploy-pages@v4
